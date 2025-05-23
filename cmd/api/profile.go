@@ -41,8 +41,23 @@ func (app *Application) createProfileHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		app.errorResponse(w, r, http.StatusInternalServerError, err)
 	}
+
+	student, err := app.db.GetStudentById(studentId)
+	user := user.Student{
+		Id:           student.Id,
+		CreatedAt:    student.CreatedAt,
+		Name:         student.Name,
+		MobileNumber: student.MobileNumber,
+		Email_Id:     student.Email_Id,
+		Gender:       student.Gender,
+		Age:          student.Age,
+	}
+	if err != nil {
+		app.errorResponse(w, r, http.StatusInternalServerError, err)
+	}
+
 	slog.Info("Profile Created Successfully!", slog.String("userId", strconv.FormatInt(studentId, 10)))
-	err = app.writeJSON(w, http.StatusOK, envelope{"data": studentId, "mesaage": "Profile Created Successfully"}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"data": user, "mesaage": "Profile Created Successfully"}, nil)
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -71,9 +86,79 @@ func (app *Application) viewProfileHandler(w http.ResponseWriter, r *http.Reques
 	}
 	if err != nil {
 		app.errorResponse(w, r, http.StatusInternalServerError, err)
+		return
 	}
 	slog.Info("User Reterived Successfully!", slog.String("user", student.Name))
 	err = app.writeJSON(w, http.StatusOK, envelope{"data": user}, nil)
+
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+}
+
+func (app *Application) updateProfileHandler(w http.ResponseWriter, r *http.Request) {
+
+	var input struct {
+		id           int64
+		Name         string `json:"name"`
+		MobileNumber string `json:"mobileNumber"`
+		Gender       string `json:"gender"`
+		Age          int    `json:"age"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	r.Header.Add("Content-Type", "application/json")
+
+	student, err := app.db.UpdateStudent(input.id, input.Name, input.MobileNumber, input.Age, input.Gender)
+
+	if err != nil {
+		app.errorResponse(w, r, http.StatusInternalServerError, err)
+	}
+
+	user := user.Student{
+		Id:           student.Id,
+		CreatedAt:    student.CreatedAt,
+		Name:         student.Name,
+		MobileNumber: student.MobileNumber,
+		Email_Id:     student.Email_Id,
+		Gender:       student.Gender,
+		Age:          student.Age,
+	}
+	if err != nil {
+		app.errorResponse(w, r, http.StatusInternalServerError, err)
+		return
+	}
+	slog.Info("User Reterived Successfully!", slog.String("user", student.Name))
+	err = app.writeJSON(w, http.StatusOK, envelope{"data": user}, nil)
+
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+}
+
+func (app *Application) deleteProfileHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readIDParam(r)
+
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	err = app.db.DeleteStudentById(id)
+
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"message": "Deleted successfully"}, nil)
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
