@@ -6,7 +6,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func (app *application) routes() *httprouter.Router {
+func (app *Application) routes() *httprouter.Router {
 	router := httprouter.New()
 	// router.HandleFunc("GET /", "", func(w http.ResponseWriter, r *http.Request) {
 	// 	w.Write([]byte("Welcome to problem beater Apis"))
@@ -18,8 +18,8 @@ func (app *application) routes() *httprouter.Router {
 	// router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 	// router.HandlerFunc(http.MethodPost, "/v1/auth/login", app.loginHandler)
 
-	// router.HandlerFunc(http.MethodGet, "/v1/user/profile/:id", app.viewProfileHandler)
-	// router.HandlerFunc(http.MethodPost, "/v1/user/profile", app.createProfileHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/user/profile/:id", app.viewProfileHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/user/profile", app.createProfileHandler)
 	// router.HandlerFunc(http.MethodPut, "/v1/user/profile", app.updateProfileHandler)
 	// router.HandlerFunc(http.MethodDelete, "/v1/user/profile", app.deleteProfileHandler)
 

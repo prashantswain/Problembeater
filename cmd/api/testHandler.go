@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (app *application) testHandler(w http.ResponseWriter, r *http.Request) {
+func (app *Application) testHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Test")
 	fmt.Println(r.ContentLength)
 }
