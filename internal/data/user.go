@@ -3,7 +3,7 @@ package user
 import "time"
 
 type Student struct {
-	Id           int64
+	Id           int64     `json:"id"`
 	CreatedAt    time.Time `json:"createdAt"`
 	Name         string    `json:"name"`
 	MobileNumber string    `json:"mobileNumber"`

@@ -40,6 +40,7 @@ func (app *Application) createProfileHandler(w http.ResponseWriter, r *http.Requ
 	studentId, err := app.db.CreateStudent(input.Name, input.EmailAddress, input.MobileNumber, input.Age, input.Gender, input.Password, time.Now())
 	if err != nil {
 		app.errorResponse(w, r, http.StatusInternalServerError, err)
+		return
 	}
 
 	student, err := app.db.GetStudentById(studentId)
@@ -54,6 +55,7 @@ func (app *Application) createProfileHandler(w http.ResponseWriter, r *http.Requ
 	}
 	if err != nil {
 		app.errorResponse(w, r, http.StatusInternalServerError, err)
+		return
 	}
 
 	slog.Info("Profile Created Successfully!", slog.String("userId", strconv.FormatInt(studentId, 10)))
@@ -75,6 +77,11 @@ func (app *Application) viewProfileHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	student, err := app.db.GetStudentById(id)
+
+	if err != nil {
+		app.errorResponse(w, r, http.StatusNotFound, err.Error())
+		return
+	}
 	user := user.Student{
 		Id:           student.Id,
 		CreatedAt:    student.CreatedAt,
@@ -84,10 +91,7 @@ func (app *Application) viewProfileHandler(w http.ResponseWriter, r *http.Reques
 		Gender:       student.Gender,
 		Age:          student.Age,
 	}
-	if err != nil {
-		app.errorResponse(w, r, http.StatusInternalServerError, err)
-		return
-	}
+
 	slog.Info("User Reterived Successfully!", slog.String("user", student.Name))
 	err = app.writeJSON(w, http.StatusOK, envelope{"data": user}, nil)
 
@@ -100,7 +104,7 @@ func (app *Application) viewProfileHandler(w http.ResponseWriter, r *http.Reques
 func (app *Application) updateProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
-		id           int64
+		Id           int64  `json:"id"`
 		Name         string `json:"name"`
 		MobileNumber string `json:"mobileNumber"`
 		Gender       string `json:"gender"`
@@ -115,10 +119,20 @@ func (app *Application) updateProfileHandler(w http.ResponseWriter, r *http.Requ
 
 	r.Header.Add("Content-Type", "application/json")
 
-	student, err := app.db.UpdateStudent(input.id, input.Name, input.MobileNumber, input.Age, input.Gender)
+	err = app.db.UpdateStudent(input.Id, input.Name, input.MobileNumber, input.Age, input.Gender)
 
 	if err != nil {
-		app.errorResponse(w, r, http.StatusInternalServerError, err)
+		app.errorResponse(w, r, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Get Student object
+
+	student, err := app.db.GetStudentById(input.Id)
+
+	if err != nil {
+		app.errorResponse(w, r, http.StatusNotFound, err.Error())
+		return
 	}
 
 	user := user.Student{
@@ -130,10 +144,7 @@ func (app *Application) updateProfileHandler(w http.ResponseWriter, r *http.Requ
 		Gender:       student.Gender,
 		Age:          student.Age,
 	}
-	if err != nil {
-		app.errorResponse(w, r, http.StatusInternalServerError, err)
-		return
-	}
+
 	slog.Info("User Reterived Successfully!", slog.String("user", student.Name))
 	err = app.writeJSON(w, http.StatusOK, envelope{"data": user}, nil)
 

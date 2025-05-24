@@ -20,7 +20,7 @@ func (app *Application) routes() *httprouter.Router {
 
 	router.HandlerFunc(http.MethodGet, "/v1/user/profile/:id", app.viewProfileHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/user/createProfile", app.createProfileHandler)
-	router.HandlerFunc(http.MethodPut, "/v1/user/profile", app.updateProfileHandler)
+	router.HandlerFunc(http.MethodPut, "/v1/user/updateProfile", app.updateProfileHandler)
 	router.HandlerFunc(http.MethodDelete, "/v1/user/deleteProfile/:id", app.deleteProfileHandler)
 
 	router.HandlerFunc(http.MethodGet, "/v1/student/test", app.testHandler)
