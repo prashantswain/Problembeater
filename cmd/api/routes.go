@@ -8,16 +8,14 @@ import (
 
 func (app *Application) routes() *httprouter.Router {
 	router := httprouter.New()
-	// router.HandleFunc("GET /", "", func(w http.ResponseWriter, r *http.Request) {
-	// 	w.Write([]byte("Welcome to problem beater Apis"))
-	// })
 
-	// router.NotFound = http.HandlerFunc(app.notFoundResponse)
-	// router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
+	router.NotFound = http.HandlerFunc(app.notFoundResponse)
+	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 
 	// router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 	// router.HandlerFunc(http.MethodPost, "/v1/auth/login", app.loginHandler)
 
+	//Profile Create, Read, Update, Delete
 	router.HandlerFunc(http.MethodGet, "/v1/user/profile/:id", app.viewProfileHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/user/createProfile", app.createProfileHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/user/updateProfile", app.updateProfileHandler)

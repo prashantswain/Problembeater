@@ -10,6 +10,7 @@ import (
 	"github.com/prashantswain/problem-beater/internal/validator"
 )
 
+// Handler for Create Student
 func (app *Application) createProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
@@ -28,7 +29,9 @@ func (app *Application) createProfileHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	v := validator.New()
-	v.Check(input.EmailAddress != "", "Email Address", "must be provided")
+	v.Check(input.EmailAddress != "", "emailID", "must be provided")
+	v.Check(input.Name != "", "name", "must be provided")
+	v.Check(input.MobileNumber != "", "mobileNumber", "must be provided")
 	if !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
@@ -68,6 +71,7 @@ func (app *Application) createProfileHandler(w http.ResponseWriter, r *http.Requ
 
 }
 
+// Handler for Get Student
 func (app *Application) viewProfileHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 
@@ -101,6 +105,7 @@ func (app *Application) viewProfileHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+// Handler for Update Student
 func (app *Application) updateProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
@@ -114,6 +119,12 @@ func (app *Application) updateProfileHandler(w http.ResponseWriter, r *http.Requ
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
+		return
+	}
+	v := validator.New()
+	v.Check(input.Id != 0, "id", "must be provided")
+	if !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
@@ -154,6 +165,7 @@ func (app *Application) updateProfileHandler(w http.ResponseWriter, r *http.Requ
 	}
 }
 
+// Handler for DeleteStudent
 func (app *Application) deleteProfileHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 
