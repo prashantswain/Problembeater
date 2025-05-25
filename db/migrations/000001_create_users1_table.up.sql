@@ -1,0 +1,1 @@
+UPDATE students SET class = "class 7" WHERE id = 1;

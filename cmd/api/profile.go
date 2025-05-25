@@ -16,7 +16,7 @@ func (app *Application) createProfileHandler(w http.ResponseWriter, r *http.Requ
 	var input struct {
 		Name         string `json:"name"`
 		EmailAddress string `json:"emailID"`
-		MobileNumber string `json:"mobileNumber"`
+		MobileNumber int    `json:"mobileNumber"`
 		Gender       string `json:"gender"`
 		Age          int    `json:"age"`
 		Password     string `json:"password"`
@@ -31,7 +31,8 @@ func (app *Application) createProfileHandler(w http.ResponseWriter, r *http.Requ
 	v := validator.New()
 	v.Check(input.EmailAddress != "", "emailID", "must be provided")
 	v.Check(input.Name != "", "name", "must be provided")
-	v.Check(input.MobileNumber != "", "mobileNumber", "must be provided")
+	v.Check(input.MobileNumber != 0, "mobileNumber", "must be provided")
+	v.Check(input.Password != "", "password", "must be provided")
 	if !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
@@ -55,6 +56,7 @@ func (app *Application) createProfileHandler(w http.ResponseWriter, r *http.Requ
 		Email_Id:     student.Email_Id,
 		Gender:       student.Gender,
 		Age:          student.Age,
+		ClassId:      student.ClassId,
 	}
 	if err != nil {
 		app.errorResponse(w, r, http.StatusInternalServerError, err)
@@ -94,10 +96,11 @@ func (app *Application) viewProfileHandler(w http.ResponseWriter, r *http.Reques
 		Email_Id:     student.Email_Id,
 		Gender:       student.Gender,
 		Age:          student.Age,
+		ClassId:      student.ClassId,
 	}
 
 	slog.Info("User Reterived Successfully!", slog.String("user", student.Name))
-	err = app.writeJSON(w, http.StatusOK, envelope{"data": user}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"data": user, "message": "User read successfully."}, nil)
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -111,9 +114,10 @@ func (app *Application) updateProfileHandler(w http.ResponseWriter, r *http.Requ
 	var input struct {
 		Id           int64  `json:"id"`
 		Name         string `json:"name"`
-		MobileNumber string `json:"mobileNumber"`
+		MobileNumber int    `json:"mobileNumber"`
 		Gender       string `json:"gender"`
 		Age          int    `json:"age"`
+		ClassId      int    `json:"class"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -154,10 +158,11 @@ func (app *Application) updateProfileHandler(w http.ResponseWriter, r *http.Requ
 		Email_Id:     student.Email_Id,
 		Gender:       student.Gender,
 		Age:          student.Age,
+		ClassId:      student.ClassId,
 	}
 
 	slog.Info("User Reterived Successfully!", slog.String("user", student.Name))
-	err = app.writeJSON(w, http.StatusOK, envelope{"data": user}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"data": user, "message": "User read successfully."}, nil)
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

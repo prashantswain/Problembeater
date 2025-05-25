@@ -13,7 +13,7 @@ func (app *Application) routes() *httprouter.Router {
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 
 	// router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
-	// router.HandlerFunc(http.MethodPost, "/v1/auth/login", app.loginHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/auth/login", app.loginHandler)
 
 	//Profile Create, Read, Update, Delete
 	router.HandlerFunc(http.MethodGet, "/v1/user/profile/:id", app.viewProfileHandler)
