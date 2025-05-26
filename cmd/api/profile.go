@@ -1,70 +1,106 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
-	user "github.com/prashantswain/problem-beater/internal/data"
 	"github.com/prashantswain/problem-beater/internal/validator"
 )
 
 // Handler for Create Student
 func (app *Application) createProfileHandler(w http.ResponseWriter, r *http.Request) {
 
-	var input struct {
-		Name         string `json:"name"`
-		EmailAddress string `json:"emailID"`
-		MobileNumber int    `json:"mobileNumber"`
-		Gender       string `json:"gender"`
-		Age          int    `json:"age"`
-		Password     string `json:"password"`
-	}
+	// Parse multipart form with 10MB limit
+	err := r.ParseMultipartForm(10 << 20) // 10 MB
 
-	err := app.readJSON(w, r, &input)
 	if err != nil {
-		app.badRequestResponse(w, r, err)
+		app.badRequestResponse(w, r, fmt.Errorf("could not parse multipart form: %w", err))
 		return
 	}
 
+	// Parse form fields
+	name := r.FormValue("name")
+	email := r.FormValue("emailID")
+	mobileStr := r.FormValue("mobileNumber")
+	gender := r.FormValue("gender")
+	ageStr := r.FormValue("age")
+	password := r.FormValue("password")
+	classIDStr := r.FormValue("classId")
+
+	// Convert types
+	mobileNumber, _ := strconv.Atoi(mobileStr)
+	age, _ := strconv.Atoi(ageStr)
+	classId, _ := strconv.ParseInt(classIDStr, 10, 64)
+
 	v := validator.New()
-	v.Check(input.EmailAddress != "", "emailID", "must be provided")
-	v.Check(input.Name != "", "name", "must be provided")
-	v.Check(input.MobileNumber != 0, "mobileNumber", "must be provided")
-	v.Check(input.Password != "", "password", "must be provided")
+	v.Check(email != "", "emailID", "must be provided")
+	v.Check(name != "", "name", "must be provided")
+	v.Check(mobileNumber != 0, "mobileNumber", "must be provided")
+	v.Check(password != "", "password", "must be provided")
 	if !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
+	// Handle profile picture upload
+	var imagePath string
+	file, handler, err := r.FormFile("profile_picture")
+	if err == nil {
+		defer file.Close()
+
+		// Optional: Check file type, size, etc.
+		if handler.Size > 5<<20 {
+			app.badRequestResponse(w, r, fmt.Errorf("file too large"))
+			return
+		}
+
+		uploadDir := "uploads"
+
+		// Create uploads directory if it doesn't exist
+		if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
+			err := os.MkdirAll(uploadDir, 0755)
+			if err != nil {
+				app.serverErrorResponse(w, r, fmt.Errorf("failed to create upload directory: %w", err))
+				return
+			}
+		}
+
+		// Save file with a unique name
+		safeFilename := strings.ReplaceAll(handler.Filename, " ", "_")
+		imagePath = fmt.Sprintf("%s/%d_%s", uploadDir, time.Now().UnixNano(), safeFilename)
+		dst, err := os.Create(imagePath)
+		if err != nil {
+			app.serverErrorResponse(w, r, fmt.Errorf("unable to save file: %w", err))
+			return
+		}
+		defer dst.Close()
+		io.Copy(dst, file)
+	}
+
 	// r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Add("Content-Type", "application/json")
-
-	studentId, err := app.db.CreateStudent(input.Name, input.EmailAddress, input.MobileNumber, input.Age, input.Gender, input.Password, time.Now())
+	slog.Info("Saved image", "imagePath", imagePath)
+	studentId, err := app.db.CreateStudent(name, email, mobileNumber, age, gender, password, time.Now(), classId, imagePath)
 	if err != nil {
 		app.errorResponse(w, r, http.StatusInternalServerError, err)
 		return
 	}
 
 	student, err := app.db.GetStudentById(studentId)
-	user := user.Student{
-		Id:           student.Id,
-		CreatedAt:    student.CreatedAt,
-		Name:         student.Name,
-		MobileNumber: student.MobileNumber,
-		Email_Id:     student.Email_Id,
-		Gender:       student.Gender,
-		Age:          student.Age,
-		ClassId:      student.ClassId,
-	}
+
 	if err != nil {
 		app.errorResponse(w, r, http.StatusInternalServerError, err)
 		return
 	}
 
 	slog.Info("Profile Created Successfully!", slog.String("userId", strconv.FormatInt(studentId, 10)))
-	err = app.writeJSON(w, http.StatusOK, envelope{"data": user, "mesaage": "Profile Created Successfully"}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"data": student, "mesaage": "Profile Created Successfully"}, nil)
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -88,19 +124,19 @@ func (app *Application) viewProfileHandler(w http.ResponseWriter, r *http.Reques
 		app.errorResponse(w, r, http.StatusNotFound, err.Error())
 		return
 	}
-	user := user.Student{
-		Id:           student.Id,
-		CreatedAt:    student.CreatedAt,
-		Name:         student.Name,
-		MobileNumber: student.MobileNumber,
-		Email_Id:     student.Email_Id,
-		Gender:       student.Gender,
-		Age:          student.Age,
-		ClassId:      student.ClassId,
-	}
+	// user := models.Student{
+	// 	Id:           student.Id,
+	// 	CreatedAt:    student.CreatedAt,
+	// 	Name:         student.Name,
+	// 	MobileNumber: student.MobileNumber,
+	// 	Email_Id:     student.Email_Id,
+	// 	Gender:       student.Gender,
+	// 	Age:          student.Age,
+	// 	ClassId:      student.ClassId,
+	// }
 
 	slog.Info("User Reterived Successfully!", slog.String("user", student.Name))
-	err = app.writeJSON(w, http.StatusOK, envelope{"data": user, "message": "User read successfully."}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"data": student, "message": "User read successfully."}, nil)
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -117,7 +153,7 @@ func (app *Application) updateProfileHandler(w http.ResponseWriter, r *http.Requ
 		MobileNumber int    `json:"mobileNumber"`
 		Gender       string `json:"gender"`
 		Age          int    `json:"age"`
-		ClassId      int    `json:"class"`
+		ClassId      int64  `json:"classId"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -134,7 +170,7 @@ func (app *Application) updateProfileHandler(w http.ResponseWriter, r *http.Requ
 
 	r.Header.Add("Content-Type", "application/json")
 
-	err = app.db.UpdateStudent(input.Id, input.Name, input.MobileNumber, input.Age, input.Gender)
+	err = app.db.UpdateStudent(input.Id, input.Name, input.MobileNumber, input.Age, input.Gender, input.ClassId, "")
 
 	if err != nil {
 		app.errorResponse(w, r, http.StatusInternalServerError, err.Error())
@@ -150,19 +186,19 @@ func (app *Application) updateProfileHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	user := user.Student{
-		Id:           student.Id,
-		CreatedAt:    student.CreatedAt,
-		Name:         student.Name,
-		MobileNumber: student.MobileNumber,
-		Email_Id:     student.Email_Id,
-		Gender:       student.Gender,
-		Age:          student.Age,
-		ClassId:      student.ClassId,
-	}
+	// user := models.Student{
+	// 	Id:           student.Id,
+	// 	CreatedAt:    student.CreatedAt,
+	// 	Name:         student.Name,
+	// 	MobileNumber: student.MobileNumber,
+	// 	Email_Id:     student.Email_Id,
+	// 	Gender:       student.Gender,
+	// 	Age:          student.Age,
+	// 	ClassId:      student.ClassId,
+	// }
 
 	slog.Info("User Reterived Successfully!", slog.String("user", student.Name))
-	err = app.writeJSON(w, http.StatusOK, envelope{"data": user, "message": "User read successfully."}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"data": student, "message": "User read successfully."}, nil)
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

@@ -21,6 +21,9 @@ func (app *Application) routes() *httprouter.Router {
 	router.HandlerFunc(http.MethodPut, "/v1/user/updateProfile", app.updateProfileHandler)
 	router.HandlerFunc(http.MethodDelete, "/v1/user/deleteProfile/:id", app.deleteProfileHandler)
 
+	router.HandlerFunc(http.MethodPost, "/v1/createClass", app.createClassHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/getAllClasses", app.getAllClasses)
+
 	router.HandlerFunc(http.MethodGet, "/v1/student/test", app.testHandler)
 	// router.HandlerFunc(http.MethodPost, "/v1/user/address", app.testHandler)
 	// router.HandlerFunc(http.MethodPut, "/v1/user/address", app.testHandler)

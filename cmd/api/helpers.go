@@ -93,10 +93,10 @@ func (app *Application) readJSON(w http.ResponseWriter, r *http.Request, dst int
 
 var jwtKey = []byte(os.Getenv("secret_key_is=niaws"))
 
-func generateToken(userID string) (string, error) {
+func GenerateToken(userID string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(), // 1 hour expiry
+		"exp":     time.Now().Add(time.Hour * 720).Unix(), // 1 hour expiry
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -104,7 +104,7 @@ func generateToken(userID string) (string, error) {
 	return token.SignedString(jwtKey)
 }
 
-func validateToken(tokenString string) (string, error) {
+func ValidateToken(tokenString string) (string, error) {
 	claims := jwt.MapClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
