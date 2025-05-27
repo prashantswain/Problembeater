@@ -13,19 +13,26 @@ func (app *Application) routes() *httprouter.Router {
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 
 	// router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
-	router.HandlerFunc(http.MethodPost, "/v1/auth/login", app.loginHandler)
 
-	//Profile Create, Read, Update, Delete
-	router.HandlerFunc(http.MethodGet, "/v1/user/profile/:id", app.viewProfileHandler)
-	router.HandlerFunc(http.MethodPost, "/v1/user/createProfile", app.createProfileHandler)
-	router.HandlerFunc(http.MethodPut, "/v1/user/updateProfile", app.updateProfileHandler)
-	router.HandlerFunc(http.MethodDelete, "/v1/user/deleteProfile/:id", app.deleteProfileHandler)
+	// Login/Logout/ForgotPassword
+	router.HandlerFunc(http.MethodPost, "/v1/problem_beater/auth/login", app.loginHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/problem_beater/auth/logout/:id", app.logoutUser)
+	router.HandlerFunc(http.MethodPost, "/v1/problem_beater/user/forgotPassword", app.forgotPassword)
 
-	router.HandlerFunc(http.MethodPost, "/v1/createClass", app.createClassHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/getAllClasses", app.getAllClasses)
+	// Profile Create, Read, Update, Delete
+	router.HandlerFunc(http.MethodGet, "/v1/problem_beater/user/profile/:id", app.viewProfileHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/problem_beater/user/createProfile", app.createProfileHandler)
+	router.HandlerFunc(http.MethodPut, "/v1/problem_beater/user/updateProfile", app.updateProfileHandler)
+	router.HandlerFunc(http.MethodDelete, "/v1/problem_beater/user/deleteProfile/:id", app.deleteProfileHandler)
 
-	router.HandlerFunc(http.MethodGet, "/v1/student/test", app.testHandler)
-	// router.HandlerFunc(http.MethodPost, "/v1/user/address", app.testHandler)
+	// Class Create, Read, Update, Delete
+	router.HandlerFunc(http.MethodPost, "/v1/problem_beater/createClass", app.createClassHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/problem_beater/getAllClasses", app.getAllClasses)
+	router.HandlerFunc(http.MethodPut, "/v1/problem_beater/updateClass", app.updateClass)
+	router.HandlerFunc(http.MethodDelete, "/v1/problem_beater/deleteClass/:id", app.deleteClass)
+
+	router.HandlerFunc(http.MethodGet, "/v1/problem_beater/student/test", app.testHandler)
+
 	// router.HandlerFunc(http.MethodPut, "/v1/user/address", app.testHandler)
 	// router.HandlerFunc(http.MethodDelete, "/v1/user/address", app.testHandler)
 

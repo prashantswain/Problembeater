@@ -124,16 +124,6 @@ func (app *Application) viewProfileHandler(w http.ResponseWriter, r *http.Reques
 		app.errorResponse(w, r, http.StatusNotFound, err.Error())
 		return
 	}
-	// user := models.Student{
-	// 	Id:           student.Id,
-	// 	CreatedAt:    student.CreatedAt,
-	// 	Name:         student.Name,
-	// 	MobileNumber: student.MobileNumber,
-	// 	Email_Id:     student.Email_Id,
-	// 	Gender:       student.Gender,
-	// 	Age:          student.Age,
-	// 	ClassId:      student.ClassId,
-	// }
 
 	slog.Info("User Reterived Successfully!", slog.String("user", student.Name))
 	err = app.writeJSON(w, http.StatusOK, envelope{"data": student, "message": "User read successfully."}, nil)
@@ -185,17 +175,6 @@ func (app *Application) updateProfileHandler(w http.ResponseWriter, r *http.Requ
 		app.errorResponse(w, r, http.StatusNotFound, err.Error())
 		return
 	}
-
-	// user := models.Student{
-	// 	Id:           student.Id,
-	// 	CreatedAt:    student.CreatedAt,
-	// 	Name:         student.Name,
-	// 	MobileNumber: student.MobileNumber,
-	// 	Email_Id:     student.Email_Id,
-	// 	Gender:       student.Gender,
-	// 	Age:          student.Age,
-	// 	ClassId:      student.ClassId,
-	// }
 
 	slog.Info("User Reterived Successfully!", slog.String("user", student.Name))
 	err = app.writeJSON(w, http.StatusOK, envelope{"data": student, "message": "User read successfully."}, nil)
