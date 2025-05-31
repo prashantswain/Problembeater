@@ -28,6 +28,28 @@ func (app *Application) readIDParam(r *http.Request) (int64, error) {
 	return id, nil
 }
 
+func (app *Application) authenticate(r *http.Request, w http.ResponseWriter) (int64, error) {
+	authToken := r.Header.Get("Authorization")
+	slog.Info("Auth:", authToken, "")
+	userIDInString, err := ValidateToken(authToken)
+	slog.Info("Auth:", userIDInString, "")
+
+	if err != nil {
+		app.errorResponse(w, r, http.StatusUnauthorized, err.Error())
+		return 0, err
+	}
+
+	id, err := strconv.ParseInt(userIDInString, 10, 64)
+
+	err = app.db.ValidateSession(id, authToken)
+
+	if err != nil {
+		app.errorResponse(w, r, http.StatusUnauthorized, err.Error())
+		return id, err
+	}
+	return id, nil
+}
+
 func (app *Application) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
 	js, err := json.Marshal(data) //MarshalIndent(data, "", "\t")
 	if err != nil {

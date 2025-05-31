@@ -58,14 +58,12 @@ func (app *Application) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 // Forgot Password
 func (app *Application) logoutUser(w http.ResponseWriter, r *http.Request) {
-	userId, err := app.readIDParam(r)
-
+	id, err := app.authenticate(r, w)
 	if err != nil {
-		http.NotFound(w, r)
 		return
 	}
 
-	err = app.db.Logout(userId)
+	err = app.db.Logout(id)
 	if err != nil {
 		app.errorResponse(w, r, http.StatusNotFound, err.Error())
 		return

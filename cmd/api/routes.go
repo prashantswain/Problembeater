@@ -16,7 +16,7 @@ func (app *Application) routes() *httprouter.Router {
 
 	// Login/Logout/ForgotPassword
 	router.HandlerFunc(http.MethodPost, "/v1/problem_beater/auth/login", app.loginHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/problem_beater/auth/logout/:id", app.logoutUser)
+	router.HandlerFunc(http.MethodGet, "/v1/problem_beater/auth/logout", app.logoutUser)
 	router.HandlerFunc(http.MethodPost, "/v1/problem_beater/user/forgotPassword", app.forgotPassword)
 
 	// Profile Create, Read, Update, Delete

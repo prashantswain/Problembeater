@@ -34,7 +34,7 @@ func (app *Application) createProfileHandler(w http.ResponseWriter, r *http.Requ
 	classIDStr := r.FormValue("classId")
 
 	// Convert types
-	mobileNumber, _ := strconv.Atoi(mobileStr)
+	mobileNumber, err := strconv.Atoi(mobileStr)
 	age, _ := strconv.Atoi(ageStr)
 	classId, _ := strconv.ParseInt(classIDStr, 10, 64)
 
