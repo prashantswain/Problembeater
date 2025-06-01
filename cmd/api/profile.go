@@ -34,15 +34,15 @@ func (app *Application) createProfileHandler(w http.ResponseWriter, r *http.Requ
 	classIDStr := r.FormValue("classId")
 
 	// Convert types
-	mobileNumber, err := strconv.Atoi(mobileStr)
+	mobileNumber, _ := strconv.Atoi(mobileStr)
 	age, _ := strconv.Atoi(ageStr)
 	classId, _ := strconv.ParseInt(classIDStr, 10, 64)
 
 	v := validator.New()
-	v.Check(email != "", "emailID", "must be provided")
-	v.Check(name != "", "name", "must be provided")
-	v.Check(mobileNumber != 0, "mobileNumber", "must be provided")
-	v.Check(password != "", "password", "must be provided")
+	v.Check(email != "", "emailID", "must be provided and should be in correct format")
+	v.Check(name != "", "name", "must be provided and should be in correct format")
+	v.Check(mobileNumber != 0, "mobileNumber", "must be provided and should be in correct format")
+	v.Check(password != "", "password", "must be provided and should be in correct format")
 	if !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
@@ -84,11 +84,16 @@ func (app *Application) createProfileHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	// r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	r.Header.Add("Content-Type", "application/json")
+	// r.Header.Add("Content-Type", "application/json")
 	slog.Info("Saved image", "imagePath", imagePath)
-	studentId, err := app.db.CreateStudent(name, email, mobileNumber, age, gender, password, time.Now(), classId, imagePath)
+	emailInLowercase := strings.ToLower(email)
+	studentId, userStatus, err := app.db.CreateStudent(name, emailInLowercase, mobileNumber, age, gender, password, time.Now(), classId, imagePath)
 	if err != nil {
-		app.errorResponse(w, r, http.StatusInternalServerError, err)
+		if userStatus == 1 {
+			app.errorResponse(w, r, http.StatusConflict, err.Error())
+		} else {
+			app.errorResponse(w, r, http.StatusInternalServerError, err)
+		}
 		return
 	}
 

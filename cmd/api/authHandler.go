@@ -33,7 +33,7 @@ func (app *Application) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	userObject, err := app.db.Login(credentials.Username, credentials.Password)
 	if err != nil {
-		app.errorResponse(w, r, http.StatusNotFound, err)
+		app.errorResponse(w, r, http.StatusNotFound, err.Error())
 		return
 	}
 
