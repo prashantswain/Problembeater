@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/prashantswain/problem-beater/internal/models"
@@ -31,7 +32,7 @@ func (app *Application) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	r.Header.Add("Content-Type", "application/json")
 
-	userObject, err := app.db.Login(credentials.Username, credentials.Password)
+	userObject, err := app.db.Login(strings.ToLower(credentials.Username), credentials.Password)
 	if err != nil {
 		app.errorResponse(w, r, http.StatusNotFound, err.Error())
 		return
@@ -96,7 +97,7 @@ func (app *Application) forgotPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.db.ForgotPassword(request.Email, request.Password)
+	err = app.db.ForgotPassword(strings.ToLower(request.Email), request.Password)
 	if err != nil {
 		app.errorResponse(w, r, http.StatusNotFound, err.Error())
 		return
